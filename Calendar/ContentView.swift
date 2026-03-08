@@ -106,6 +106,7 @@ struct ContentView: View {
         do {
             let data = try JSONEncoder().encode(tasks)
             UserDefaults.standard.set(data, forKey: tasksStorageKey)
+            UserDefaults.standard.synchronize() // Hemen kaydet
         } catch {
             print("Failed to encode tasks: \(error)")
         }
@@ -148,14 +149,17 @@ struct ContentView: View {
                         Button("Tümünü tamamla") {
                             for i in tasks.indices { tasks[i].isCompleted = true }
                             for t in tasks { cancelReminder(for: t) }
+                            saveTasks() // Hemen kaydet
                         }
                         Button("Tamamlananları geri al") {
                             for i in tasks.indices { tasks[i].isCompleted = false }
                             for t in tasks { scheduleReminder(for: t) }
+                            saveTasks() // Hemen kaydet
                         }
                         Button(role: .destructive) {
                             for t in tasks where t.isCompleted { cancelReminder(for: t) }
                             tasks.removeAll { $0.isCompleted }
+                            saveTasks() // Hemen kaydet
                         } label: {
                             Text("Tamamlananları Sil")
                         }
@@ -192,6 +196,7 @@ struct ContentView: View {
                                 } else {
                                     scheduleReminder(for: tasks[index])
                                 }
+                                saveTasks() // Hemen kaydet
                             }) {
                                 HStack(spacing: 8) {
                                     Image(systemName: tasks[index].isCompleted ? "checkmark.circle.fill" : "circle")
@@ -251,6 +256,7 @@ struct ContentView: View {
                             }
                         }
                         tasks.removeAll { idsToDelete.contains($0.id) }
+                        saveTasks() // Hemen kaydet
                     }
                 }
                 .listStyle(.plain)
@@ -265,6 +271,7 @@ struct ContentView: View {
                             let task = Task(title: newTaskTitle, dueDate: due, priority: newTaskPriority)
                             tasks.append(task)
                             scheduleReminder(for: task)
+                            saveTasks() // Hemen kaydet
                             newTaskTitle = ""
                             newTaskDueDate = nil
                             newTaskDueTime = Date()
@@ -355,6 +362,7 @@ struct ContentView: View {
                                                 } else {
                                                     scheduleReminder(for: tasks[index])
                                                 }
+                                                saveTasks() // Hemen kaydet
                                             } label: {
                                                 Image(systemName: tasks[index].isCompleted ? "checkmark.circle.fill" : "circle")
                                                     .foregroundStyle(tasks[index].isCompleted ? .green : .primary)
@@ -408,6 +416,7 @@ struct ContentView: View {
                                         }
                                     }
                                     tasks.removeAll { ids.contains($0.id) }
+                                    saveTasks() // Hemen kaydet
                                 }
                             }
                         }
@@ -427,6 +436,7 @@ struct ContentView: View {
                                                 } else {
                                                     scheduleReminder(for: tasks[index])
                                                 }
+                                                saveTasks() // Hemen kaydet
                                             } label: {
                                                 Image(systemName: tasks[index].isCompleted ? "checkmark.circle.fill" : "circle")
                                                     .foregroundStyle(tasks[index].isCompleted ? .green : .primary)
@@ -470,6 +480,7 @@ struct ContentView: View {
                                         }
                                     }
                                     tasks.removeAll { ids.contains($0.id) }
+                                    saveTasks() // Hemen kaydet
                                 }
                             }
                         }
@@ -486,6 +497,7 @@ struct ContentView: View {
                             let task = Task(title: newTaskTitle, dueDate: due, priority: newTaskPriority)
                             tasks.append(task)
                             scheduleReminder(for: task)
+                            saveTasks() // Hemen kaydet
                             newTaskTitle = ""
                             agendaNewTaskTime = Date()
                             newTaskPriority = .normal
@@ -508,7 +520,6 @@ struct ContentView: View {
             .tabItem { Label("Ajanda", systemImage: "calendar") }
         }
         .onAppear { loadTasks(); requestNotificationPermission() }
-        .onChange(of: tasks) { saveTasks() }
         .sheet(isPresented: $isEditingTask) {
             NavigationView {
                 VStack(spacing: 12) {
@@ -557,6 +568,7 @@ struct ContentView: View {
                                 }
                                 tasks[idx].priority = editingPriority
                                 scheduleReminder(for: tasks[idx])
+                                saveTasks() // Hemen kaydet
                             }
                             isEditingTask = false
                         }
